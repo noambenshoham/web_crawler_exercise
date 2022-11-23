@@ -12,13 +12,10 @@ def main():
     depth_string = sys.argv[2]
     results = get_results(main_url, 0, int(depth_string))
     
-
-    
-    
-    # results_json = {"results": results}
-    # result_file_path = Path("results.json")
-    # results_json_string = json.dumps(results_json)
-    # result_file_path.write_text(results_json_string)
+    results_json = {"results": results}
+    result_file_path = Path("results.json")
+    results_json_string = json.dumps(results_json)
+    result_file_path.write_text(results_json_string)
 
 def get_results(url, depth, max_depth):
     results = []
@@ -71,7 +68,7 @@ def get_image_srcs(html_string, url):
         elif image_src.startswith('/'):
             image_src = image_src[1:]
         image_srcs.append(image_src)
-        
+
     for bg_image in get_bg_images(html_string, url):
         if (validators.url(bg_image) == True):
             image_src += bg_image
