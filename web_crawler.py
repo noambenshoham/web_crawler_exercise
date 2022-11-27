@@ -56,18 +56,20 @@ def get_bg_images(html_string, url):
 def get_image_srcs(html_string, url):
 
     html_soup = BeautifulSoup(html_string, "html.parser")
-    image_srcs = []
+    image_srcs = {}
+    image_srcs = set()
     for image_tag in html_soup.find_all("img"):
         image_src = image_tag["src"]
 
         if image_src.startswith('data:image/gif;base64') or image_src.startswith('data:image/png;base64'):
             continue
         image_src = refactor_images_url(image_src, url)
+
         if image_src not in image_srcs:
-            image_srcs.append(image_src)
+            image_srcs.add(image_src)
     for bg_image_src in get_bg_images(html_string, url):
         bg_image_src = refactor_images_url(bg_image_src, url)
-        image_srcs.append(bg_image_src)
+        image_srcs.add(bg_image_src)
 
     
     
