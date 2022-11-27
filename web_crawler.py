@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 import json
 import validators
+from urllib.parse import urlparse
 
 result_file_path = "results.json"
 
@@ -35,7 +36,6 @@ def get_results(url, depth, max_depth):
     links = get_a_hrefs(html_string)
     for link in links:
         results += get_results(link, depth + 1, max_depth)
-        # print(results)
     return results
 
 def get_web_page(page_link):
@@ -47,8 +47,6 @@ def get_bg_images(html_string, url):
     bg_images = []
     soup = BeautifulSoup(html_string, "html.parser")
     for items in soup.select("[style*='background-image']"):
-        # image= "https:" + items['style'].split("url(")[1].split(")")[0]
-        # print(image)
         style_attrs = items.get('style').split(";")
         for style_attr in style_attrs:
             if style_attr.startswith('background'):
@@ -61,19 +59,28 @@ def get_image_srcs(html_string, url):
     image_srcs = []
     for image_tag in html_soup.find_all("img"):
         image_src = image_tag["src"]
+
         if image_src.startswith('data:image/gif;base64') or image_src.startswith('data:image/png;base64'):
             continue
-        if image_src.startswith('//'):
-            image_src = image_src[2:]
-        elif image_src.startswith('/'):
-            image_src = image_src[1:]
-        image_srcs.append(image_src)
+        image_src = refactor_images_url(image_src, url)
+        if image_src not in image_srcs:
+            image_srcs.append(image_src)
+    for bg_image_src in get_bg_images(html_string, url):
+        bg_image_src = refactor_images_url(bg_image_src, url)
+        image_srcs.append(bg_image_src)
 
-    for bg_image in get_bg_images(html_string, url):
-        if (validators.url(bg_image) == True):
-            image_src += bg_image
+    
     
     return image_srcs
+
+def refactor_images_url(image_src, site_url):
+    url_protocol= (urlparse(site_url)).scheme
+    url_domain  = urlparse(site_url).netloc
+    if image_src.startswith('//'):
+        image_src = url_protocol + ":" + image_src
+    elif image_src.startswith('/'):
+        image_src = url_domain + image_src
+    return image_src
 
 def get_a_hrefs(html_string):
     html_soup = BeautifulSoup(html_string, "html.parser")
